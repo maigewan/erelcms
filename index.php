@@ -1,40 +1,38 @@
 <?php // @codingStandardsIgnoreFile
 /**
- * This file is part of Pico. It's copyrighted by the contributors recorded
- * in the version control history of the file, available from the following
- * original location:
+ * 此文件是 Pico 的一部分，其版权归文件版本控制历史中记录的贡献者所有，
+ * 可以从以下原始位置查看文件历史：
  *
  * <https://github.com/picocms/Pico/blob/master/index.php>
  *
  * SPDX-License-Identifier: MIT
- * License-Filename: LICENSE
+ * 许可证文件名: LICENSE
  */
 
-// load dependencies
+// 加载依赖
 if (is_file(__DIR__ . '/vendor/autoload.php')) {
-    // composer root package
+    // composer 根包
     require_once(__DIR__ . '/vendor/autoload.php');
 } elseif (is_file(__DIR__ . '/../../../vendor/autoload.php')) {
-    // composer dependency package
+    // composer 依赖包
     require_once(__DIR__ . '/../../../vendor/autoload.php');
 } else {
     die(
-        "Cannot find 'vendor/autoload.php'. If you're using a composer-based Pico install, run `composer install`. "
-        . "If you're rather trying to use one of Pico's pre-built release packages, make sure to download Pico's "
-        . "latest release package named 'pico-release-v*.tar.gz' (don't download a source code package)."
+        "无法找到 'vendor/autoload.php' 文件。如果您使用的是基于 Composer 的 Pico 安装，请运行 `composer install`。"
+        . "如果您尝试使用 Pico 的预构建发布包，请确保下载最新的以 'pico-release-v*.tar.gz' 命名的发布包（不要下载源码包）。"
     );
 }
 
-// instance Pico
+// 实例化 Pico
 $pico = new Pico(
-    __DIR__,    // root dir
-    'config/',  // config dir
-    'plugins/', // plugins dir
-    'themes/'   // themes dir
+    __DIR__,    // 根目录
+    'config/',  // 配置目录
+    'plugins/', // 插件目录
+    'themes/'   // 主题目录
 );
 
-// override configuration?
+// 是否覆盖配置？
 //$pico->setConfig(array());
 
-// run application
+// 运行应用程序
 echo $pico->run();

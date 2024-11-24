@@ -2185,55 +2185,63 @@ class Pico
      *
      * @return string the base url
      */
-    public function getBaseUrl()
-    {
-        $baseUrl = $this->getConfig('base_url');
-        if ($baseUrl) {
-            return $baseUrl;
-        }
+public function getBaseUrl()
+{
+    $baseUrl = $this->getConfig('base_url');
+    if ($baseUrl) {
+        return rtrim($baseUrl, '/') . '/';
+    }
 
-        $host = 'localhost';
-        if (!empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
-            $host = $_SERVER['HTTP_X_FORWARDED_HOST'];
-        } elseif (!empty($_SERVER['HTTP_HOST'])) {
-            $host = $_SERVER['HTTP_HOST'];
-        } elseif (!empty($_SERVER['SERVER_NAME'])) {
-            $host = $_SERVER['SERVER_NAME'];
-        }
+    $host = 'localhost';
+    if (!empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+        $host = $_SERVER['HTTP_X_FORWARDED_HOST'];
+    } elseif (!empty($_SERVER['HTTP_HOST'])) {
+        $host = $_SERVER['HTTP_HOST'];
+    } elseif (!empty($_SERVER['SERVER_NAME'])) {
+        $host = $_SERVER['SERVER_NAME'];
+    }
 
-        $port = 80;
-        if (!empty($_SERVER['HTTP_X_FORWARDED_PORT'])) {
-            $port = (int) $_SERVER['HTTP_X_FORWARDED_PORT'];
-        } elseif (!empty($_SERVER['SERVER_PORT'])) {
-            $port = (int) $_SERVER['SERVER_PORT'];
-        }
+    $port = 80;
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PORT'])) {
+        $port = (int) $_SERVER['HTTP_X_FORWARDED_PORT'];
+    } elseif (!empty($_SERVER['SERVER_PORT'])) {
+        $port = (int) $_SERVER['SERVER_PORT'];
+    }
 
-        $hostPortPosition = ($host[0] === '[') ? strpos($host, ':', strrpos($host, ']') ?: 0) : strrpos($host, ':');
-        if ($hostPortPosition !== false) {
-            $port = (int) substr($host, $hostPortPosition + 1);
-            $host = substr($host, 0, $hostPortPosition);
-        }
+    // 移除主机名中的端口
+    $hostPortPosition = ($host[0] === '[') ? strpos($host, ':', strrpos($host, ']') ?: 0) : strrpos($host, ':');
+    if ($hostPortPosition !== false) {
+        $port = (int) substr($host, $hostPortPosition + 1);
+        $host = substr($host, 0, $hostPortPosition);
+    }
 
-        $protocol = 'http';
-        if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
-            $secureProxyHeader = strtolower(current(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'])));
-            $protocol = in_array($secureProxyHeader, array('https', 'on', 'ssl', '1'), true) ? 'https' : 'http';
-        } elseif (!empty($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] !== 'off')) {
-            $protocol = 'https';
-        } elseif ($port === 443) {
-            $protocol = 'https';
-        }
+    // 确定协议
+    $protocol = 'http';
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        $secureProxyHeader = strtolower(current(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'])));
+        $protocol = in_array($secureProxyHeader, array('https', 'on', 'ssl', '1'), true) ? 'https' : 'http';
+    } elseif (!empty($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] !== 'off')) {
+        $protocol = 'https';
+    } elseif ($port === 443) {
+        $protocol = 'https';
+    }
 
-        $basePath = isset($_SERVER['SCRIPT_NAME']) ? dirname($_SERVER['SCRIPT_NAME']) : '/';
-        $basePath = !in_array($basePath, array('.', '/', '\\'), true) ? $basePath . '/' : '/';
+    $basePath = isset($_SERVER['SCRIPT_NAME']) ? dirname($_SERVER['SCRIPT_NAME']) : '/';
+    $basePath = !in_array($basePath, array('.', '/', '\\'), true) ? $basePath . '/' : '/';
 
-        if ((($protocol === 'http') && ($port !== 80)) || (($protocol === 'https') && ($port !== 443))) {
+    // 仅在端口不是默认端口时附加
+    if (($protocol === 'http' && $port !== 80) || ($protocol === 'https' && $port !== 443)) {
+        // 避免在 HTTPS 下附加 :80
+        if ($protocol === 'https' && $port === 80) {
+            // 忽略端口，不附加
+        } else {
             $host = $host . ':' . $port;
         }
-
-        $this->config['base_url'] = $protocol . "://" . $host . $basePath;
-        return $this->config['base_url'];
     }
+
+    $this->config['base_url'] = $protocol . "://" . $host . $basePath;
+    return $this->config['base_url'];
+}
 
     /**
      * Returns TRUE if URL rewriting is enabled
